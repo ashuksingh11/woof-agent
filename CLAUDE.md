@@ -135,14 +135,3 @@ Edit `appsettings.json`:
 - Google connector is alpha — suppress experimental warning with `#pragma warning disable SKEXP0070`
 - A2UI is v0.9 (public preview) — verify schema against https://a2ui.org/ before implementing
 
-## Decision Log
-
-- **2026-02-06**: Chose layered 4-project structure (Cli, Core, Providers, Shared) for clean separation and swappable providers
-- **2026-02-06**: Chose appsettings.json + user-secrets for config — standard .NET pattern, keys never in repo
-- **2026-02-06**: Using .NET 8 (installed SDK) — will upgrade to .NET 9 when SDK is available
-- **2026-02-06**: SK packages: Microsoft.SemanticKernel 1.70.0 (stable), Connectors.Google 1.70.0-alpha (prerelease)
-- **2026-02-06**: Added OpenRouter support via custom Endpoint in OpenAiSettings — enables use of OpenRouter, Azure, or other OpenAI-compatible APIs
-- **2026-02-06**: A2UI agent generates JSON directly (no separate client) — schema embedded in system prompt, two-part response format with `---a2ui---` delimiter
-- **2026-02-06**: Default CLI mode is A2UI; use `--text` flag for plain text SmartFridgeAgent
-- **2026-02-17**: Added ZomatoAgent with MCP integration — uses `ModelContextProtocol` 0.8.0-preview.1 SDK, pre-obtained OAuth token via Postman, `--zomato` CLI flag
-- **2026-02-17**: Added SwiggyAgent with MCP integration — 3 services (Food, Instamart, Dineout) sharing one OAuth token, `--swiggy`/`--swiggy-instamart`/`--swiggy-dineout` CLI flags
