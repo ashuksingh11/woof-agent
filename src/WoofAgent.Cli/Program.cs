@@ -32,7 +32,7 @@ configuration.GetSection(LlmSettings.SectionName).Bind(llmSettings);
 var kernelBuilder = Kernel.CreateBuilder();
 kernelBuilder.AddLlmProvider(llmSettings);
 
-McpClient? mcpClient = null;
+IMcpClient? mcpClient = null;
 
 if (useMcp)
 {
@@ -69,8 +69,8 @@ if (useMcp)
         }
     }
 
-    // Set up HTTP transport with optional auth token
-    var transportOptions = new HttpClientTransportOptions
+    // Set up SSE transport with optional auth token
+    var transportOptions = new SseClientTransportOptions
     {
         Endpoint = new Uri(endpoint),
         Name = name
@@ -84,11 +84,11 @@ if (useMcp)
         };
     }
 
-    var transport = new HttpClientTransport(transportOptions);
+    var transport = new SseClientTransport(transportOptions);
 
     // Connect to MCP server and discover tools
     Console.WriteLine($"Connecting to {name} MCP server at {endpoint}...");
-    mcpClient = await McpClient.CreateAsync(transport);
+    mcpClient = await McpClientFactory.CreateAsync(transport);
     var tools = await mcpClient.ListToolsAsync();
     Console.WriteLine($"Discovered {tools.Count} {name} tools.");
 
