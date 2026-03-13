@@ -1,9 +1,11 @@
 #pragma warning disable SKEXP0001 // AsKernelFunction is experimental
 
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SemanticKernel;
 using ModelContextProtocol.Client;
 using WoofAgent.Core.Agents;
+using WoofAgent.Core.Filters;
 using WoofAgent.Core.Plugins;
 using WoofAgent.Providers;
 using WoofAgent.Shared.Configuration;
@@ -14,6 +16,7 @@ var useZomato = args.Contains("--zomato");
 var useSwiggy = args.Contains("--swiggy");
 var useSwiggyInstamart = args.Contains("--swiggy-instamart");
 var useSwiggyDineout = args.Contains("--swiggy-dineout");
+var useWasher = args.Contains("--washer");
 var useAnySwiggy = useSwiggy || useSwiggyInstamart || useSwiggyDineout;
 var useMcp = useZomato || useAnySwiggy;
 
@@ -95,6 +98,24 @@ if (useMcp)
     // Register MCP tools as SK kernel functions
     kernelBuilder.Plugins.AddFromFunctions(name,
         tools.Select(t => t.AsKernelFunction()));
+
+    // Register chaining filter for Swiggy Food MCP tools
+    // Chains: search_restaurants→get_restaurant_menu, add_item_to_cart→get_cart_summary+get_delivery_eta, place_order→get_order_status
+    if (useAnySwiggy)
+    {
+        var mcpPluginName = name; // capture for closure
+        kernelBuilder.Services.AddSingleton<IAutoFunctionInvocationFilter>(
+            _ => new SwiggyChainingFilter(mcpPluginName));
+    }
+}
+else if (useWasher)
+{
+    // Register washer + shopping plugins for tool chaining demo
+    kernelBuilder.Plugins.AddFromType<WasherPlugin>();
+    kernelBuilder.Plugins.AddFromType<ShoppingPlugin>();
+
+    // Register the chaining filter: schedule_washing automatically triggers check_detergent
+    kernelBuilder.Services.AddSingleton<IAutoFunctionInvocationFilter, WasherChainingFilter>();
 }
 else
 {
@@ -116,6 +137,10 @@ else if (useAnySwiggy)
         : useSwiggyDineout ? SwiggyService.Dineout
         : SwiggyService.Food;
     agent = new SwiggyAgent(kernel, service);
+}
+else if (useWasher)
+{
+    agent = new SmartWasherAgent(kernel);
 }
 else if (useA2UI)
 {
